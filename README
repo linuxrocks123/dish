@@ -1,0 +1,9 @@
+Run ./Build to build
+See dish.y for language syntax
+Needs "pip3 install paddleocr" and "pip3 install paddlepaddle"
+Tested on Linux.  Should work on other X11-based systems.
+If you want to port to Windows or OS X, reimplement the stuff in xmacroplay.c using those systems' GUI automation hooks.  Ditto for Wayland.
+
+Based partly on code from xmacrorec project.  I thank theem for their work.
+
+dish is copyright (c) 2024 Patrick Simmons and licensed under the GPLv2.
