@@ -1,0 +1,3 @@
+#! /bin/sh
+
+bison --defines=dish.h dish.y; gcc -g -c xmacroplay.c; g++ -g *.cpp dish.tab.c xmacroplay.o -lX11 -lXtst

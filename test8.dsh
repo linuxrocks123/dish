@@ -1,0 +1,7 @@
+key Control_L+F1
+key F6
+type bankofamerica.com
+key Return
+sleep 10
+click [ 1 from top ] User ID
+type linuxrocks123

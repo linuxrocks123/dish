@@ -1,0 +1,7 @@
+key Control_L+F1
+sleep 5
+click Bills
+sleep 2
+click Fifth
+sleep 2
+click Bank of America

@@ -1,0 +1,5 @@
+key Control_L+F1
+sleep 5
+click + [ 0 , -0.5 ] Google Search
+type what is a dish
+key Return
