@@ -99,7 +99,9 @@ Command:        CLICK Options STRING
                 }
         |       SLEEP INTEGER
                 {
+#ifndef PARSER_TEST
                     sleep($2);
+#endif
                 }
         |       /*empty*/
                 {
@@ -174,7 +176,7 @@ int yylex()
       return 0;
     
     buffer_end = buffer + strlen(buffer);
-    if(*(buffer_end-1)=='\n')
+    while(*(buffer_end-1)=='\n' || *(buffer_end-1)==' ' || *(buffer_end-1)=='\t')
     {
       buffer_end--;
       *buffer_end = '\0';
@@ -383,6 +385,10 @@ static Paddle_Entry get_paddle_entry_for_line(string line)
 
 Coordinates get_coordinates(string text, Options options)
 {
+  #ifdef PARSER_TEST
+  return Coordinates{0,0};
+  #endif
+  
   if(!options.case_sensitive)
     text = StringFunctions::upperCase(text);
   
@@ -457,11 +463,18 @@ Coordinates get_coordinates(string text, Options options)
 
   offset_point.x += options.offset.x;
   offset_point.y += options.offset.y;
+  offset_point.x.round(1);
+  offset_point.y.round(1);
   return offset_point;
 }
 
 void xmacroplay(const string& x)
 {
+  #ifdef PARSER_TEST
+  cout << x << endl;
+  return;
+  #endif
+  
   static Display* display;
   static int screen;
   if(!display)
