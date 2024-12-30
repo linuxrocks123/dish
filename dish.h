@@ -74,7 +74,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 44 "dish.y"
+#line 47 "dish.y"
 
   Options options;
   Number numeric_literal;

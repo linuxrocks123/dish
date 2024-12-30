@@ -75,11 +75,14 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <list>
 #include <regex>
 #include <unistd.h>
 #include <unordered_set>
+#include <vector>
   
 #include "Number.hpp"
+#include "rtolvalue.hpp"
 #include "spawn.hpp"
 #include "StringFunctions.h"
 #include "xmacroplay.h"
@@ -107,7 +110,7 @@ Coordinates get_coordinates(string text, Options options);
 void xmacroplay(const string& x);
 
 
-#line 111 "dish.tab.c"
+#line 114 "dish.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -546,8 +549,8 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    71,    71,    78,    83,    87,   100,   105,   108,   113,
-     119,   125,   131,   136,   140,   144
+       0,    74,    74,    81,    86,    90,   103,   110,   113,   118,
+     124,   130,   136,   141,   145,   149
 };
 #endif
 
@@ -1395,35 +1398,35 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* Command: CLICK Options STRING  */
-#line 72 "dish.y"
+#line 75 "dish.y"
                 {
                     Coordinates c = get_coordinates((yyvsp[0].text_literal),(yyvsp[-1].options));
                     xmacroplay("MotionNotify "+to_string(c.x)+" "+to_string(c.y));
                     xmacroplay("ButtonPress 1");
                     xmacroplay("ButtonRelease 1");
                 }
-#line 1406 "dish.tab.c"
+#line 1409 "dish.tab.c"
     break;
 
   case 3: /* Command: SEEK Options STRING  */
-#line 79 "dish.y"
+#line 82 "dish.y"
                 {
                     Coordinates c = get_coordinates((yyvsp[0].text_literal),(yyvsp[-1].options));
                     xmacroplay("MotionNotify "+to_string(c.x)+" "+to_string(c.y));
                 }
-#line 1415 "dish.tab.c"
+#line 1418 "dish.tab.c"
     break;
 
   case 4: /* Command: TYPE STRING  */
-#line 84 "dish.y"
+#line 87 "dish.y"
                 {
                     xmacroplay(string{"String "}+(yyvsp[0].text_literal));
                 }
-#line 1423 "dish.tab.c"
+#line 1426 "dish.tab.c"
     break;
 
   case 5: /* Command: KEY KEY_LIST  */
-#line 88 "dish.y"
+#line 91 "dish.y"
                 {
                     for(const char* command : { "KeyStrPress ", "KeyStrRelease " } )
                     {
@@ -1436,95 +1439,97 @@ yyreduce:
                       }
                     }
                 }
-#line 1440 "dish.tab.c"
+#line 1443 "dish.tab.c"
     break;
 
   case 6: /* Command: SLEEP INTEGER  */
-#line 101 "dish.y"
+#line 104 "dish.y"
                 {
+#ifndef PARSER_TEST
                     sleep((yyvsp[0].integral_literal));
+#endif
                 }
-#line 1448 "dish.tab.c"
+#line 1453 "dish.tab.c"
     break;
 
   case 7: /* Command: %empty  */
-#line 105 "dish.y"
+#line 110 "dish.y"
                 {
                 }
-#line 1455 "dish.tab.c"
+#line 1460 "dish.tab.c"
     break;
 
   case 8: /* Options: CASE Disambiguator  */
-#line 109 "dish.y"
+#line 114 "dish.y"
                 {
                     (yyval.options) = (yyvsp[0].options);
                     (yyval.options).case_sensitive = true;
                 }
-#line 1464 "dish.tab.c"
+#line 1469 "dish.tab.c"
     break;
 
   case 9: /* Options: Disambiguator  */
-#line 114 "dish.y"
+#line 119 "dish.y"
                 {
                     (yyval.options) = (yyvsp[0].options);
                     (yyval.options).case_sensitive = false;
                 }
-#line 1473 "dish.tab.c"
+#line 1478 "dish.tab.c"
     break;
 
   case 10: /* Disambiguator: '[' INTEGER FROM ORDINAL ']' Offset  */
-#line 120 "dish.y"
+#line 125 "dish.y"
                 {
                     (yyval.options) = (yyvsp[0].options);
                     (yyval.options).ordinal = (yyvsp[-4].integral_literal);
                     (yyval.options).direction = (Options::Direction)(yyvsp[-2].integral_literal);
                 }
-#line 1483 "dish.tab.c"
+#line 1488 "dish.tab.c"
     break;
 
   case 11: /* Disambiguator: Offset  */
-#line 126 "dish.y"
+#line 131 "dish.y"
                 {
                     (yyval.options) = (yyvsp[0].options);
                     (yyval.options).ordinal = -1;
                 }
-#line 1492 "dish.tab.c"
+#line 1497 "dish.tab.c"
     break;
 
   case 12: /* Offset: '+' '[' Number ',' Number ']'  */
-#line 132 "dish.y"
+#line 137 "dish.y"
                 {
                     (yyval.options).offset = Coordinates{(yyvsp[-3].numeric_literal), (yyvsp[-1].numeric_literal)};
                 }
-#line 1500 "dish.tab.c"
+#line 1505 "dish.tab.c"
     break;
 
   case 13: /* Offset: %empty  */
-#line 136 "dish.y"
+#line 141 "dish.y"
                 {
                     (yyval.options).offset = Coordinates{0,0};
                 }
-#line 1508 "dish.tab.c"
+#line 1513 "dish.tab.c"
     break;
 
   case 14: /* Number: NUMBER  */
-#line 141 "dish.y"
+#line 146 "dish.y"
                 {
                     (yyval.numeric_literal) = (yyvsp[0].numeric_literal);
                 }
-#line 1516 "dish.tab.c"
+#line 1521 "dish.tab.c"
     break;
 
   case 15: /* Number: INTEGER  */
-#line 145 "dish.y"
+#line 150 "dish.y"
                 {
                     (yyval.numeric_literal) = (yyvsp[0].integral_literal);
                 }
-#line 1524 "dish.tab.c"
+#line 1529 "dish.tab.c"
     break;
 
 
-#line 1528 "dish.tab.c"
+#line 1533 "dish.tab.c"
 
       default: break;
     }
@@ -1748,7 +1753,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 149 "dish.y"
+#line 154 "dish.y"
 
 
 int yylex()
@@ -1777,7 +1782,7 @@ int yylex()
       return 0;
     
     buffer_end = buffer + strlen(buffer);
-    if(*(buffer_end-1)=='\n')
+    while(*(buffer_end-1)=='\n' || *(buffer_end-1)==' ' || *(buffer_end-1)=='\t')
     {
       buffer_end--;
       *buffer_end = '\0';
@@ -1914,6 +1919,9 @@ struct Paddle_Entry
   unsigned width() const { return x_right - x_left; }
   unsigned height() const { return y_bottom - y_top; }
   Paddle_Entry subentry(string to_match) const;
+  unsigned intersects(const Paddle_Entry& other) const; //returns number of pixels
+
+  void merge_with(const Paddle_Entry& other);
 };
 
 Paddle_Entry Paddle_Entry::subentry(string to_match) const
@@ -1931,6 +1939,27 @@ Paddle_Entry Paddle_Entry::subentry(string to_match) const
   to_return.y_bottom = y_bottom;
   to_return.characters = to_match;
   return to_return;
+}
+
+unsigned Paddle_Entry::intersects(const Paddle_Entry& other) const
+{
+  int x_left_interect = max(x_left,other.x_left);
+  int x_right_intersect = min(x_right,other.x_right);
+  int y_top_intersect = max(y_top,other.y_top);
+  int y_bottom_intersect = min(y_bottom,other.y_bottom);
+
+  if(x_right_intersect - x_left_interect > 0 && y_bottom_intersect - y_top_intersect > 0)
+    return (x_right_intersect-x_left_interect)*(y_bottom_intersect-y_top_intersect);
+  return 0;
+}
+
+void Paddle_Entry::merge_with(const Paddle_Entry& other)
+{
+  x_left = min(x_left,other.x_left);
+  x_right = max(x_right,other.x_right);
+  y_top = min(y_top,other.y_top);
+  y_bottom = max(y_bottom,other.y_bottom);
+  characters += '\n'+other.characters;
 }
 
 static pair<unsigned,unsigned> parse_paddle_token(string token)
@@ -1984,16 +2013,39 @@ static Paddle_Entry get_paddle_entry_for_line(string line)
   return to_return;
 }
 
-Coordinates get_coordinates(string text, Options options)
+string process_escape_sequences(const string& text)
+{
+  string new_body;
+  bool backslash_active = false;
+  for(char c : text)
+    if(backslash_active)
+    {
+      if(c=='n')
+        new_body+='\n';
+      else if(c=='\\')
+        new_body+='\\';
+      else
+      {
+        cerr << "Invalid escape sequence in text: " << text << endl;
+        exit(3);
+      }
+      backslash_active = false;
+    }
+    else
+      if(c!='\\')
+        new_body+=c;
+      else
+        backslash_active = True;
+  return new_body;
+}
+
+template<class T>
+T get_matches(string text, const Options& options, istream& paddle_in)
 {
   if(!options.case_sensitive)
     text = StringFunctions::upperCase(text);
   
-  system("import -window root dish_current_screenshot.png");
-  auto paddle = spawn({"paddleocr", "--lang", "en", "--image_dir", "dish_current_screenshot.png"});
-  get_streams(paddle);
-
-  vector<Paddle_Entry> matches;
+  T matches;
   string line;
   while(getline(paddle_in,line))
   {
@@ -2007,7 +2059,12 @@ Coordinates get_coordinates(string text, Options options)
     if(entry.characters.length())
       matches.push_back(entry);
   }
+  
+  return matches;
+}
 
+Coordinates disambiguate_matches(const string& text, Options options, vector<Paddle_Entry>& matches)
+{
   if(matches.empty())
   {
     cerr << "Could not find text: " << text << endl;
@@ -2030,23 +2087,34 @@ Coordinates get_coordinates(string text, Options options)
       cerr << "Too few matches for text: " << text << endl;
       exit(1);
     }
+
+    auto paddle_entry_comparator = [&options,&text](const Paddle_Entry& left, const Paddle_Entry& right)
+      {
+        switch(options.direction)
+        {
+        case Options::LEFT: return left.center().x < right.center().x;
+        case Options::RIGHT: return left.center().x > right.center().x;
+        case Options::TOP: return left.center().y < right.center().y;
+        case Options::BOTTOM: return left.center().y > right.center().y;
+        }
+      };
     
-    sort(matches.begin(),matches.end(),[&options,&text](const Paddle_Entry& left, const Paddle_Entry& right)
-         {
-           if(options.direction < Options::TOP && left.center().x==right.center().x || options.direction >= Options::TOP && left.center().y==right.center().y)
-           {
-             cerr << "Could not disambiguate matches for text: " << text << endl;
-             exit(2);
-           }
-           switch(options.direction)
-           {
-           case Options::LEFT: return left.center().x < right.center().x;
-           case Options::RIGHT: return left.center().x > right.center().x;
-           case Options::TOP: return left.center().y < right.center().y;
-           case Options::BOTTOM: return left.center().y > right.center().y;
-           }
-         });
-    entry = matches[options.ordinal-1];
+    sort(matches.begin(),matches.end(),paddle_entry_comparator);
+
+    unsigned match_idx = options.ordinal-1;
+    entry = matches[match_idx];
+    
+    if(matches.size() > match_idx+1 && !paddle_entry_comparator(entry,matches[match_idx+1]))
+    {
+      cerr << "Could not disambiguate matches for text: " << text << endl;
+      exit(2);
+    }
+    
+    if(match_idx && !paddle_entry_comparator(matches[match_idx-1],entry))
+    {
+      cerr << "Could not disambiguate matches for text: " << text << endl;
+      exit(2);
+    }
   }
 
   options.offset.x *= entry.width();
@@ -2060,11 +2128,89 @@ Coordinates get_coordinates(string text, Options options)
 
   offset_point.x += options.offset.x;
   offset_point.y += options.offset.y;
+  offset_point.x.round(1);
+  offset_point.y.round(1);
   return offset_point;
+}
+
+Coordinates get_coordinates(string text, Options options)
+{
+  #ifdef PARSER_TEST
+  return Coordinates{0,0};
+  #endif
+  
+  system("import -window root dish_current_screenshot.png");
+  auto paddle = spawn({"paddleocr", "--lang", "en", "--det_db_score_mode", "slow", "--image_dir", "dish_current_screenshot.png"});
+  get_streams(paddle);
+
+  text = process_escape_sequences(text);
+  vector<string> result;
+  StringFunctions::tokenize(result,text,"\n");
+
+  //Common case: only matching single line
+  if(result.size()==1)
+    return disambiguate_matches(text,options,rtolvalue<vector<Paddle_Entry>>(get_matches<vector<Paddle_Entry>>(text,options,paddle_in)));
+
+  //Complex case: attemping to match multiple lines of text
+  string paddle_str;
+  getline(paddle_in,paddle_str,'\0');
+  istringstream stream_in{paddle_str};
+  vector<vector<Paddle_Entry>> match_table;
+  match_table.reserve(result.size()-1);
+  list<Paddle_Entry> final_matches = get_matches<list<Paddle_Entry>>(result[0],options,stream_in);
+  for(int i=1; i<result.size(); i++)
+  {
+    stream_in.clear(); stream_in.seekg(0);
+    match_table.push_back(get_matches<vector<Paddle_Entry>>(result[i],options,stream_in));
+  }
+
+  //Now, iteratively attempt to match against the next line until all lines have been considered.
+
+  /*Y Axis bounding box tolerance of 10 pixels.  Theoretically, the top of the
+    next line's bounding box should be on the exact same Y coordinate as the
+    bottom of the current line's bounding box, but we live in a dark and twisted
+    world.*/
+  const static unsigned Y_BB_TOLERANCE = 10;
+  for(auto& row : match_table)
+    for(auto& entry : row)
+      entry.y_top -= min(entry.y_top,Y_BB_TOLERANCE);
+
+  for(auto& row : match_table)
+    for(list<Paddle_Entry>::iterator f_it=final_matches.begin(), next; f_it!=final_matches.end(); f_it=next)
+    {
+      next = std::next(f_it);
+      
+      Paddle_Entry* best_intersector;
+      unsigned best_intersection = 0;
+      for(Paddle_Entry& entry : row)
+      {
+        unsigned intersection = f_it->intersects(entry);
+        if(intersection > best_intersection)
+        {
+          best_intersector = &entry;
+          best_intersection = intersection;
+        }
+      }
+
+      if(best_intersection)
+      {
+        f_it->merge_with(*best_intersector);
+        row.erase(row.begin()+(best_intersector-&row[0]));
+      }
+      else
+        final_matches.erase(f_it);
+    }
+
+  return disambiguate_matches(text,options,rtolvalue<vector<Paddle_Entry>>(vector<Paddle_Entry>(final_matches.begin(),final_matches.end())));
 }
 
 void xmacroplay(const string& x)
 {
+  #ifdef PARSER_TEST
+  cout << x << endl;
+  return;
+  #endif
+  
   static Display* display;
   static int screen;
   if(!display)

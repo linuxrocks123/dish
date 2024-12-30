@@ -7,11 +7,14 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <list>
 #include <regex>
 #include <unistd.h>
 #include <unordered_set>
+#include <vector>
   
 #include "Number.hpp"
+#include "rtolvalue.hpp"
 #include "spawn.hpp"
 #include "StringFunctions.h"
 #include "xmacroplay.h"
@@ -313,6 +316,9 @@ struct Paddle_Entry
   unsigned width() const { return x_right - x_left; }
   unsigned height() const { return y_bottom - y_top; }
   Paddle_Entry subentry(string to_match) const;
+  unsigned intersects(const Paddle_Entry& other) const; //returns number of pixels
+
+  void merge_with(const Paddle_Entry& other);
 };
 
 Paddle_Entry Paddle_Entry::subentry(string to_match) const
@@ -330,6 +336,27 @@ Paddle_Entry Paddle_Entry::subentry(string to_match) const
   to_return.y_bottom = y_bottom;
   to_return.characters = to_match;
   return to_return;
+}
+
+unsigned Paddle_Entry::intersects(const Paddle_Entry& other) const
+{
+  int x_left_interect = max(x_left,other.x_left);
+  int x_right_intersect = min(x_right,other.x_right);
+  int y_top_intersect = max(y_top,other.y_top);
+  int y_bottom_intersect = min(y_bottom,other.y_bottom);
+
+  if(x_right_intersect - x_left_interect > 0 && y_bottom_intersect - y_top_intersect > 0)
+    return (x_right_intersect-x_left_interect)*(y_bottom_intersect-y_top_intersect);
+  return 0;
+}
+
+void Paddle_Entry::merge_with(const Paddle_Entry& other)
+{
+  x_left = min(x_left,other.x_left);
+  x_right = max(x_right,other.x_right);
+  y_top = min(y_top,other.y_top);
+  y_bottom = max(y_bottom,other.y_bottom);
+  characters += '\n'+other.characters;
 }
 
 static pair<unsigned,unsigned> parse_paddle_token(string token)
@@ -383,20 +410,39 @@ static Paddle_Entry get_paddle_entry_for_line(string line)
   return to_return;
 }
 
-Coordinates get_coordinates(string text, Options options)
+string process_escape_sequences(const string& text)
 {
-  #ifdef PARSER_TEST
-  return Coordinates{0,0};
-  #endif
-  
+  string new_body;
+  bool backslash_active = false;
+  for(char c : text)
+    if(backslash_active)
+    {
+      if(c=='n')
+        new_body+='\n';
+      else if(c=='\\')
+        new_body+='\\';
+      else
+      {
+        cerr << "Invalid escape sequence in text: " << text << endl;
+        exit(3);
+      }
+      backslash_active = false;
+    }
+    else
+      if(c!='\\')
+        new_body+=c;
+      else
+        backslash_active = True;
+  return new_body;
+}
+
+template<class T>
+T get_matches(string text, const Options& options, istream& paddle_in)
+{
   if(!options.case_sensitive)
     text = StringFunctions::upperCase(text);
   
-  system("import -window root dish_current_screenshot.png");
-  auto paddle = spawn({"paddleocr", "--lang", "en", "--image_dir", "dish_current_screenshot.png"});
-  get_streams(paddle);
-
-  vector<Paddle_Entry> matches;
+  T matches;
   string line;
   while(getline(paddle_in,line))
   {
@@ -410,7 +456,12 @@ Coordinates get_coordinates(string text, Options options)
     if(entry.characters.length())
       matches.push_back(entry);
   }
+  
+  return matches;
+}
 
+Coordinates disambiguate_matches(const string& text, Options options, vector<Paddle_Entry>& matches)
+{
   if(matches.empty())
   {
     cerr << "Could not find text: " << text << endl;
@@ -433,23 +484,34 @@ Coordinates get_coordinates(string text, Options options)
       cerr << "Too few matches for text: " << text << endl;
       exit(1);
     }
+
+    auto paddle_entry_comparator = [&options,&text](const Paddle_Entry& left, const Paddle_Entry& right)
+      {
+        switch(options.direction)
+        {
+        case Options::LEFT: return left.center().x < right.center().x;
+        case Options::RIGHT: return left.center().x > right.center().x;
+        case Options::TOP: return left.center().y < right.center().y;
+        case Options::BOTTOM: return left.center().y > right.center().y;
+        }
+      };
     
-    sort(matches.begin(),matches.end(),[&options,&text](const Paddle_Entry& left, const Paddle_Entry& right)
-         {
-           if(options.direction < Options::TOP && left.center().x==right.center().x || options.direction >= Options::TOP && left.center().y==right.center().y)
-           {
-             cerr << "Could not disambiguate matches for text: " << text << endl;
-             exit(2);
-           }
-           switch(options.direction)
-           {
-           case Options::LEFT: return left.center().x < right.center().x;
-           case Options::RIGHT: return left.center().x > right.center().x;
-           case Options::TOP: return left.center().y < right.center().y;
-           case Options::BOTTOM: return left.center().y > right.center().y;
-           }
-         });
-    entry = matches[options.ordinal-1];
+    sort(matches.begin(),matches.end(),paddle_entry_comparator);
+
+    unsigned match_idx = options.ordinal-1;
+    entry = matches[match_idx];
+    
+    if(matches.size() > match_idx+1 && !paddle_entry_comparator(entry,matches[match_idx+1]))
+    {
+      cerr << "Could not disambiguate matches for text: " << text << endl;
+      exit(2);
+    }
+    
+    if(match_idx && !paddle_entry_comparator(matches[match_idx-1],entry))
+    {
+      cerr << "Could not disambiguate matches for text: " << text << endl;
+      exit(2);
+    }
   }
 
   options.offset.x *= entry.width();
@@ -466,6 +528,77 @@ Coordinates get_coordinates(string text, Options options)
   offset_point.x.round(1);
   offset_point.y.round(1);
   return offset_point;
+}
+
+Coordinates get_coordinates(string text, Options options)
+{
+  #ifdef PARSER_TEST
+  return Coordinates{0,0};
+  #endif
+  
+  system("import -window root dish_current_screenshot.png");
+  auto paddle = spawn({"paddleocr", "--lang", "en", "--det_db_score_mode", "slow", "--image_dir", "dish_current_screenshot.png"});
+  get_streams(paddle);
+
+  text = process_escape_sequences(text);
+  vector<string> result;
+  StringFunctions::tokenize(result,text,"\n");
+
+  //Common case: only matching single line
+  if(result.size()==1)
+    return disambiguate_matches(text,options,rtolvalue<vector<Paddle_Entry>>(get_matches<vector<Paddle_Entry>>(text,options,paddle_in)));
+
+  //Complex case: attemping to match multiple lines of text
+  string paddle_str;
+  getline(paddle_in,paddle_str,'\0');
+  istringstream stream_in{paddle_str};
+  vector<vector<Paddle_Entry>> match_table;
+  match_table.reserve(result.size()-1);
+  list<Paddle_Entry> final_matches = get_matches<list<Paddle_Entry>>(result[0],options,stream_in);
+  for(int i=1; i<result.size(); i++)
+  {
+    stream_in.clear(); stream_in.seekg(0);
+    match_table.push_back(get_matches<vector<Paddle_Entry>>(result[i],options,stream_in));
+  }
+
+  //Now, iteratively attempt to match against the next line until all lines have been considered.
+
+  /*Y Axis bounding box tolerance of 10 pixels.  Theoretically, the top of the
+    next line's bounding box should be on the exact same Y coordinate as the
+    bottom of the current line's bounding box, but we live in a dark and twisted
+    world.*/
+  const static unsigned Y_BB_TOLERANCE = 10;
+  for(auto& row : match_table)
+    for(auto& entry : row)
+      entry.y_top -= min(entry.y_top,Y_BB_TOLERANCE);
+
+  for(auto& row : match_table)
+    for(list<Paddle_Entry>::iterator f_it=final_matches.begin(), next; f_it!=final_matches.end(); f_it=next)
+    {
+      next = std::next(f_it);
+      
+      Paddle_Entry* best_intersector;
+      unsigned best_intersection = 0;
+      for(Paddle_Entry& entry : row)
+      {
+        unsigned intersection = f_it->intersects(entry);
+        if(intersection > best_intersection)
+        {
+          best_intersector = &entry;
+          best_intersection = intersection;
+        }
+      }
+
+      if(best_intersection)
+      {
+        f_it->merge_with(*best_intersector);
+        row.erase(row.begin()+(best_intersector-&row[0]));
+      }
+      else
+        final_matches.erase(f_it);
+    }
+
+  return disambiguate_matches(text,options,rtolvalue<vector<Paddle_Entry>>(vector<Paddle_Entry>(final_matches.begin(),final_matches.end())));
 }
 
 void xmacroplay(const string& x)
