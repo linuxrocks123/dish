@@ -12,7 +12,9 @@
 #include <unistd.h>
 #include <unordered_set>
 #include <vector>
-  
+
+#include "Dimension_Swapper.hpp"
+#include "MultiArray.hpp"
 #include "Number.hpp"
 #include "rtolvalue.hpp"
 #include "spawn.hpp"
@@ -40,6 +42,7 @@ struct Options
 
 Coordinates get_coordinates(string text, Options options);
 void xmacroplay(const string& x);
+void dump_ocr_to_txt();
 
 %}
 
@@ -56,7 +59,7 @@ void xmacroplay(const string& x);
   int integral_literal;
 }
 
-%token CLICK SEEK TYPE KEY SLEEP
+%token CLICK SEEK TYPE KEY SLEEP PRINT
 %token CASE
 %token FROM
 %token <numeric_literal> NUMBER
@@ -106,6 +109,7 @@ Command:        CLICK Options STRING
                     sleep($2);
 #endif
                 }
+        |       PRINT { dump_ocr_to_txt(); }
         |       /*empty*/
                 {
                 };
@@ -207,6 +211,8 @@ int yylex()
     return SEEK;
   else if(!strcmp(token,"type") && line_state==SEEN_NOTHING)
     return TYPE;
+  else if(!strcmp(token,"print") && line_state==SEEN_NOTHING)
+    return PRINT;
   else if(!strcmp(token,"key") && line_state==SEEN_NOTHING)
   {
     line_state = SEEN_KEY_CMD;
@@ -528,6 +534,72 @@ Coordinates disambiguate_matches(const string& text, Options options, vector<Pad
   offset_point.x.round(1);
   offset_point.y.round(1);
   return offset_point;
+}
+
+void dump_ocr_to_txt()
+{
+  system("import -window root dish_current_screenshot.png");
+  auto paddle = spawn({"paddleocr", "--lang", "en", "--det_db_score_mode", "slow", "--image_dir", "dish_current_screenshot.png"});
+  get_streams(paddle);
+
+  vector<Paddle_Entry> all_entries;
+  string line;
+  while(getline(paddle_in,line))
+  {
+    if(line.find("INFO: [[[")==-1)
+      continue;
+
+    all_entries.push_back(get_paddle_entry_for_line(line));
+  }
+
+  unsigned max_x = 0, max_y = 0;
+  for(const Paddle_Entry& entry : all_entries)
+  {
+    max_x = max(max_x,entry.x_right+1);
+    max_y = max(max_y,entry.y_bottom+1);
+  }
+
+  unsigned resolution = 16;
+  while(resolution)
+  {
+    unsigned width = max_x/resolution;
+    unsigned height = max_y/resolution;
+    char* linear_ptr = (char*)alloca(width*height);
+    MultiArray<char,2> text_map_(linear_ptr,height,width);
+    stack<int> s;
+    Array_Index_Swapper<MultiArray<char,2>,int,2> text_map(text_map_,s);
+    bzero(linear_ptr,width*height);
+    for(const Paddle_Entry& entry : all_entries)
+    {
+      unsigned x_coord = entry.x_left/resolution;
+      unsigned y_coord = entry.y_top/resolution;
+      for(char c : entry.characters)
+      {
+        if(text_map[x_coord][y_coord])
+          goto fail;
+        text_map[x_coord++][y_coord] = c;
+      }
+    }
+
+    for(unsigned j=0; j<height; j++)
+      for(int i=width-1; i>=0; i--)
+        if(text_map[i][j])
+        {
+          for(i=i-1; i>=0; i--)
+            if(!text_map[i][j])
+              text_map[i][j]=' ';
+          break;
+        }
+
+    for(unsigned j=0; j<height; j++)
+        if(text_map[0][j])
+          cout << &text_map[0][j] << endl;
+    
+    return;
+
+  fail:
+    resolution/=2;
+  }
 }
 
 Coordinates get_coordinates(string text, Options options)
