@@ -1,4 +1,4 @@
 #! /bin/sh
 
-bison --defines=dish.h dish.y; gcc -g -c xmacroplay.c; g++ -g -o dish Number.cpp StringFunctions.cpp spawn.cpp dish.tab.c xmacroplay.o -lX11 -lXtst
-g++ -g -o sonic sonic.cpp StringFunctions.cpp
+gcc -o dish-atk-backend dish-atk-backend.c -g -Wall -I/usr/include -I/usr/X11R6/include `pkg-config --cflags glib-2.0 gobject-2.0 atk-bridge-2.0 atspi-2` -pthread -lm `pkg-config --libs glib-2.0 gobject-2.0 atk-bridge-2.0 atspi-2`
+bison --defines=dish.h dish.y; gcc -g -c xmacroplay.c; g++ -g *.cpp dish.tab.c xmacroplay.o -lX11 -lXtst

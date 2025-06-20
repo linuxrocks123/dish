@@ -20,6 +20,8 @@ namespace StringFunctions
      int num_occurrences(const string& str, const string& substr);
      string replace(string target, const string& old_text, const string& new_text);
      string slice(const string& original, int left_idx, int right_idx);
+     string lchomp(string original, const string& ch_mask = " \t\n");
+     string rchomp(string original, const string& ch_mask = " \t\n");
 
      string upperCase(const string&);
      string lowerCase(const string&);

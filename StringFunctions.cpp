@@ -83,6 +83,20 @@ namespace StringFunctions
           return original.substr(left_idx, right_idx - left_idx);
      }
 
+     string lchomp(string original, const string& ch_mask)
+     {
+	  while(original.size() && ch_mask.find(original[0])!=string::npos)
+	       original = slice(original,1,original.size());
+	  return original;
+     }
+
+     string rchomp(string original, const string& ch_mask)
+     {
+	  while(original.size() && ch_mask.find(original[original.size()-1])!=string::npos)
+	       original = slice(original,0,-1);
+	  return original;
+     }
+
      string upperCase(const string& casey)
      {
 	  string upperCasey=casey;

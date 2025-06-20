@@ -1767,6 +1767,7 @@ yyreturnlab:
 #line 158 "dish.y"
 
 
+static FILE* yyin = stdin;
 int yylex()
 {
   static enum { SEEN_NOTHING = 0, SEEN_CASE, SEEN_ORDINAL_BEGIN, SEEN_ORDINAL_END, SEEN_OFFSET_BEGIN, SEEN_OFFSET_END, SEEN_KEY_CMD, SEEN_SLEEP_CMD } line_state;
@@ -1789,7 +1790,7 @@ int yylex()
       saveptr = nullptr;
       return 0;
     }
-    if(getline(&buffer,&ignored,stdin)==-1)
+    if(getline(&buffer,&ignored,yyin)==-1)
       return 0;
     
     buffer_end = buffer + strlen(buffer);
@@ -2146,10 +2147,11 @@ Coordinates disambiguate_matches(const string& text, Options options, vector<Pad
   return offset_point;
 }
 
+static vector<string> backend_cmd = {"paddleocr", "--lang", "en", "--det_db_score_mode", "slow", "--image_dir", "dish_current_screenshot.png"};
 void dump_ocr_to_txt()
 {
   system("import -window root dish_current_screenshot.png");
-  auto paddle = spawn({"paddleocr", "--lang", "en", "--det_db_score_mode", "slow", "--image_dir", "dish_current_screenshot.png"});
+  auto paddle = spawn(backend_cmd);
   get_streams(paddle);
 
   vector<Paddle_Entry> all_entries;
@@ -2219,7 +2221,7 @@ Coordinates get_coordinates(string text, Options options)
   #endif
   
   system("import -window root dish_current_screenshot.png");
-  auto paddle = spawn({"paddleocr", "--lang", "en", "--det_db_score_mode", "slow", "--image_dir", "dish_current_screenshot.png"});
+  auto paddle = spawn(backend_cmd);
   get_streams(paddle);
 
   text = process_escape_sequences(text);
@@ -2300,10 +2302,28 @@ void xmacroplay(const string& x)
   xmacro_command(display,screen,x.c_str());
 }
 
-int main()
+int main(int argc, char** argv)
 {
   int retval;
-  while(!feof(stdin) && !(retval = yyparse()));
-
+  
+  string single_command;
+  if(argc > 1)
+  {
+    unsigned command_idx = 1;
+    if(!strcmp(argv[1],"--backend"))
+    {
+      
+      command_idx+=2;
+      backend_cmd.clear();
+      backend_cmd.push_back(argv[2]);
+    }
+    single_command = argv[command_idx];
+    for(unsigned i=command_idx+1; i<argc; i++)
+      single_command += string(" ") + argv[i];
+    yyin = fmemopen(&single_command[0],single_command.length(),"r");
+  }
+  
+  while(!feof(yyin) && !(retval = yyparse()));
+  
   return retval;
 }
