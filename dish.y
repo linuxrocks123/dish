@@ -105,6 +105,7 @@ Command:        CLICK Options STRING
                       }
                       else
                       {
+                        fclose(stderr); 
                         Coordinates c = get_coordinates($4,$3);
                         exit(0);                      
                       }
