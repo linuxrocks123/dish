@@ -60,13 +60,14 @@ extern int yydebug;
     KEY = 261,                     /* KEY  */
     SLEEP = 262,                   /* SLEEP  */
     PRINT = 263,                   /* PRINT  */
-    CASE = 264,                    /* CASE  */
-    FROM = 265,                    /* FROM  */
-    NUMBER = 266,                  /* NUMBER  */
-    INTEGER = 267,                 /* INTEGER  */
-    ORDINAL = 268,                 /* ORDINAL  */
-    STRING = 269,                  /* STRING  */
-    KEY_LIST = 270                 /* KEY_LIST  */
+    WAIT = 264,                    /* WAIT  */
+    CASE = 265,                    /* CASE  */
+    FROM = 266,                    /* FROM  */
+    NUMBER = 267,                  /* NUMBER  */
+    INTEGER = 268,                 /* INTEGER  */
+    ORDINAL = 269,                 /* ORDINAL  */
+    STRING = 270,                  /* STRING  */
+    KEY_LIST = 271                 /* KEY_LIST  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -75,7 +76,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 50 "dish.y"
+#line 53 "dish.y"
 
   Options options;
   Number numeric_literal;
@@ -87,7 +88,7 @@ union YYSTYPE
   } key_list;
   int integral_literal;
 
-#line 91 "dish.h"
+#line 92 "dish.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

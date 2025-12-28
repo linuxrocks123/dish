@@ -6,12 +6,15 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <list>
 #include <regex>
 #include <unistd.h>
 #include <unordered_set>
 #include <vector>
+
+#include <sys/wait.h>
 
 #include "Dimension_Swapper.hpp"
 #include "MultiArray.hpp"
@@ -59,7 +62,7 @@ void dump_ocr_to_txt();
   int integral_literal;
 }
 
-%token CLICK SEEK TYPE KEY SLEEP PRINT
+%token CLICK SEEK TYPE KEY SLEEP PRINT WAIT
 %token CASE
 %token FROM
 %token <numeric_literal> NUMBER
@@ -85,6 +88,32 @@ Command:        CLICK Options STRING
                 {
                     Coordinates c = get_coordinates($3,$2);
                     xmacroplay("MotionNotify "+to_string(c.x)+" "+to_string(c.y));
+                }
+        |       WAIT INTEGER Options STRING
+                {
+                    time_t expiration = time(NULL) + $2;
+                    while(time(NULL) < expiration)
+                      if(pid_t child_pid = fork())
+                      {
+                        int status;
+                        waitpid(child_pid,&status,0);
+                        if(!WEXITSTATUS(status))
+                        {
+                          expiration = UINT64_MAX;
+                          break;
+                        }
+                      }
+                      else
+                      {
+                        Coordinates c = get_coordinates($4,$3);
+                        exit(0);                      
+                      }
+                    
+                    if(expiration!=UINT64_MAX)
+                    {
+                      cerr << "Timed out waiting for text to appear." << endl;
+                      exit(1);
+                    }
                 }
         |       TYPE STRING
                 {
@@ -160,7 +189,7 @@ Number:         NUMBER
 static FILE* yyin = stdin;
 int yylex()
 {
-  static enum { SEEN_NOTHING = 0, SEEN_CASE, SEEN_ORDINAL_BEGIN, SEEN_ORDINAL_END, SEEN_OFFSET_BEGIN, SEEN_OFFSET_END, SEEN_KEY_CMD, SEEN_SLEEP_CMD } line_state;
+  static enum { SEEN_NOTHING = 0, SEEN_WAIT, SEEN_CASE, SEEN_ORDINAL_BEGIN, SEEN_ORDINAL_END, SEEN_OFFSET_BEGIN, SEEN_OFFSET_END, SEEN_KEY_CMD, SEEN_SLEEP_CMD } line_state;
   static char* buffer;
   static char* buffer_end;
   static char* saveptr;
@@ -214,6 +243,11 @@ int yylex()
     return TYPE;
   else if(!strcmp(token,"print") && line_state==SEEN_NOTHING)
     return PRINT;
+  else if(!strcmp(token,"wait") && line_state==SEEN_NOTHING)
+  {
+    line_state = SEEN_WAIT;
+    return WAIT;
+  }
   else if(!strcmp(token,"key") && line_state==SEEN_NOTHING)
   {
     line_state = SEEN_KEY_CMD;
@@ -224,7 +258,7 @@ int yylex()
     line_state = SEEN_SLEEP_CMD;
     return SLEEP;
   }
-  else if(!strcmp(token,"-case") && line_state==SEEN_NOTHING)
+  else if(!strcmp(token,"-case") && line_state < SEEN_CASE)
   {
     line_state = SEEN_CASE;
     return CASE;
@@ -248,7 +282,7 @@ int yylex()
   }
   else if(!strcmp(token,",") && line_state==SEEN_OFFSET_BEGIN)
     return ',';
-  else if((line_state==SEEN_ORDINAL_BEGIN || line_state==SEEN_OFFSET_BEGIN || line_state==SEEN_SLEEP_CMD) && regex_match(token,NUMERIC))
+  else if((line_state==SEEN_ORDINAL_BEGIN || line_state==SEEN_OFFSET_BEGIN || line_state==SEEN_SLEEP_CMD || line_state==SEEN_WAIT) && regex_match(token,NUMERIC))
   {
     if(*token=='+')
       token++;

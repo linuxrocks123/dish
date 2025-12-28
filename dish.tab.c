@@ -74,12 +74,15 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <list>
 #include <regex>
 #include <unistd.h>
 #include <unordered_set>
 #include <vector>
+
+#include <sys/wait.h>
 
 #include "Dimension_Swapper.hpp"
 #include "MultiArray.hpp"
@@ -113,7 +116,7 @@ void xmacroplay(const string& x);
 void dump_ocr_to_txt();
 
 
-#line 117 "dish.tab.c"
+#line 120 "dish.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -150,23 +153,24 @@ enum yysymbol_kind_t
   YYSYMBOL_KEY = 6,                        /* KEY  */
   YYSYMBOL_SLEEP = 7,                      /* SLEEP  */
   YYSYMBOL_PRINT = 8,                      /* PRINT  */
-  YYSYMBOL_CASE = 9,                       /* CASE  */
-  YYSYMBOL_FROM = 10,                      /* FROM  */
-  YYSYMBOL_NUMBER = 11,                    /* NUMBER  */
-  YYSYMBOL_INTEGER = 12,                   /* INTEGER  */
-  YYSYMBOL_ORDINAL = 13,                   /* ORDINAL  */
-  YYSYMBOL_STRING = 14,                    /* STRING  */
-  YYSYMBOL_KEY_LIST = 15,                  /* KEY_LIST  */
-  YYSYMBOL_16_ = 16,                       /* '['  */
-  YYSYMBOL_17_ = 17,                       /* ']'  */
-  YYSYMBOL_18_ = 18,                       /* '+'  */
-  YYSYMBOL_19_ = 19,                       /* ','  */
-  YYSYMBOL_YYACCEPT = 20,                  /* $accept  */
-  YYSYMBOL_Command = 21,                   /* Command  */
-  YYSYMBOL_Options = 22,                   /* Options  */
-  YYSYMBOL_Disambiguator = 23,             /* Disambiguator  */
-  YYSYMBOL_Offset = 24,                    /* Offset  */
-  YYSYMBOL_Number = 25                     /* Number  */
+  YYSYMBOL_WAIT = 9,                       /* WAIT  */
+  YYSYMBOL_CASE = 10,                      /* CASE  */
+  YYSYMBOL_FROM = 11,                      /* FROM  */
+  YYSYMBOL_NUMBER = 12,                    /* NUMBER  */
+  YYSYMBOL_INTEGER = 13,                   /* INTEGER  */
+  YYSYMBOL_ORDINAL = 14,                   /* ORDINAL  */
+  YYSYMBOL_STRING = 15,                    /* STRING  */
+  YYSYMBOL_KEY_LIST = 16,                  /* KEY_LIST  */
+  YYSYMBOL_17_ = 17,                       /* '['  */
+  YYSYMBOL_18_ = 18,                       /* ']'  */
+  YYSYMBOL_19_ = 19,                       /* '+'  */
+  YYSYMBOL_20_ = 20,                       /* ','  */
+  YYSYMBOL_YYACCEPT = 21,                  /* $accept  */
+  YYSYMBOL_Command = 22,                   /* Command  */
+  YYSYMBOL_Options = 23,                   /* Options  */
+  YYSYMBOL_Disambiguator = 24,             /* Disambiguator  */
+  YYSYMBOL_Offset = 25,                    /* Offset  */
+  YYSYMBOL_Number = 26                     /* Number  */
 };
 typedef enum yysymbol_kind_t yysymbol_kind_t;
 
@@ -492,21 +496,21 @@ union yyalloc
 #endif /* !YYCOPY_NEEDED */
 
 /* YYFINAL -- State number of the termination state.  */
-#define YYFINAL  18
+#define YYFINAL  20
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   42
+#define YYLAST   38
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  20
+#define YYNTOKENS  21
 /* YYNNTS -- Number of nonterminals.  */
 #define YYNNTS  6
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  16
+#define YYNRULES  17
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  34
+#define YYNSTATES  38
 
 /* YYMAXUTOK -- Last valid token kind.  */
-#define YYMAXUTOK   270
+#define YYMAXUTOK   271
 
 
 /* YYTRANSLATE(TOKEN-NUM) -- Symbol number corresponding to TOKEN-NUM
@@ -524,12 +528,12 @@ static const yytype_int8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,    18,    19,     2,     2,     2,     2,     2,
+       2,     2,     2,    19,    20,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,    16,     2,    17,     2,     2,     2,     2,     2,     2,
+       2,    17,     2,    18,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -547,15 +551,15 @@ static const yytype_int8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
        5,     6,     7,     8,     9,    10,    11,    12,    13,    14,
-      15
+      15,    16
 };
 
 #if YYDEBUG
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    77,    77,    84,    89,    93,   106,   112,   114,   117,
-     122,   128,   134,   140,   145,   149,   153
+       0,    80,    80,    87,    92,   118,   122,   135,   141,   143,
+     146,   151,   157,   163,   169,   174,   178,   182
 };
 #endif
 
@@ -572,9 +576,9 @@ static const char *yysymbol_name (yysymbol_kind_t yysymbol) YY_ATTRIBUTE_UNUSED;
 static const char *const yytname[] =
 {
   "\"end of file\"", "error", "\"invalid token\"", "CLICK", "SEEK",
-  "TYPE", "KEY", "SLEEP", "PRINT", "CASE", "FROM", "NUMBER", "INTEGER",
-  "ORDINAL", "STRING", "KEY_LIST", "'['", "']'", "'+'", "','", "$accept",
-  "Command", "Options", "Disambiguator", "Offset", "Number", YY_NULLPTR
+  "TYPE", "KEY", "SLEEP", "PRINT", "WAIT", "CASE", "FROM", "NUMBER",
+  "INTEGER", "ORDINAL", "STRING", "KEY_LIST", "'['", "']'", "'+'", "','",
+  "$accept", "Command", "Options", "Disambiguator", "Offset", "Number", YY_NULLPTR
 };
 
 static const char *
@@ -584,7 +588,7 @@ yysymbol_name (yysymbol_kind_t yysymbol)
 }
 #endif
 
-#define YYPACT_NINF (-10)
+#define YYPACT_NINF (-16)
 
 #define yypact_value_is_default(Yyn) \
   ((Yyn) == YYPACT_NINF)
@@ -598,10 +602,10 @@ yysymbol_name (yysymbol_kind_t yysymbol)
    STATE-NUM.  */
 static const yytype_int8 yypact[] =
 {
-      -2,    -9,    -9,    -1,     1,     2,   -10,    15,    -8,     5,
-       3,     4,   -10,   -10,     6,   -10,   -10,   -10,   -10,   -10,
-      11,     0,   -10,   -10,     9,   -10,   -10,     7,     8,     0,
-      10,    12,   -10,   -10
+      15,    -9,    -9,   -12,    -5,    -6,   -16,    -4,    12,   -15,
+       0,    -3,     1,   -16,   -16,    10,   -16,   -16,   -16,    -9,
+     -16,   -16,     4,    -7,   -16,   -16,    11,    13,   -16,   -16,
+       8,   -16,    14,    -7,    16,    18,   -16,   -16
 };
 
 /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -609,22 +613,22 @@ static const yytype_int8 yypact[] =
    means the default is an error.  */
 static const yytype_int8 yydefact[] =
 {
-       8,    14,    14,     0,     0,     0,     7,     0,    14,     0,
-       0,     0,    10,    12,     0,     4,     5,     6,     1,     9,
-       0,     0,     2,     3,     0,    15,    16,     0,     0,     0,
-      14,     0,    11,    13
+       9,    15,    15,     0,     0,     0,     8,     0,     0,    15,
+       0,     0,     0,    11,    13,     0,     5,     6,     7,    15,
+       1,    10,     0,     0,     2,     3,     0,     0,    16,    17,
+       0,     4,     0,     0,    15,     0,    12,    14
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -10,   -10,    21,    16,    -3,    13
+     -16,   -16,    -2,    20,    -1,     5
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-       0,     7,    11,    12,    13,    27
+       0,     8,    12,    13,    14,    30
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -632,44 +636,42 @@ static const yytype_int8 yydefgoto[] =
    number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int8 yytable[] =
 {
-       8,     1,     2,     3,     4,     5,     6,     9,     9,    10,
-      10,    25,    26,    15,    17,    18,    16,    20,    22,    21,
-      23,    24,    28,    14,    19,    30,    29,    32,    10,    33,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,    31
+      15,     9,    10,    16,    11,    28,    29,    18,    10,    19,
+      11,    17,    20,    22,    23,    27,    24,    26,     1,     2,
+       3,     4,     5,     6,     7,    25,    31,    32,    33,    21,
+       0,     0,    34,    36,     0,    11,    37,     0,    35
 };
 
 static const yytype_int8 yycheck[] =
 {
-       9,     3,     4,     5,     6,     7,     8,    16,    16,    18,
-      18,    11,    12,    14,    12,     0,    15,    12,    14,    16,
-      14,    10,    13,     2,     8,    17,    19,    30,    18,    17,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    29
+       2,    10,    17,    15,    19,    12,    13,    13,    17,    13,
+      19,    16,     0,    13,    17,    11,    15,    19,     3,     4,
+       5,     6,     7,     8,     9,    15,    15,    14,    20,     9,
+      -1,    -1,    18,    34,    -1,    19,    18,    -1,    33
 };
 
 /* YYSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
    state STATE-NUM.  */
 static const yytype_int8 yystos[] =
 {
-       0,     3,     4,     5,     6,     7,     8,    21,     9,    16,
-      18,    22,    23,    24,    22,    14,    15,    12,     0,    23,
-      12,    16,    14,    14,    10,    11,    12,    25,    13,    19,
-      17,    25,    24,    17
+       0,     3,     4,     5,     6,     7,     8,     9,    22,    10,
+      17,    19,    23,    24,    25,    23,    15,    16,    13,    13,
+       0,    24,    13,    17,    15,    15,    23,    11,    12,    13,
+      26,    15,    14,    20,    18,    26,    25,    18
 };
 
 /* YYR1[RULE-NUM] -- Symbol kind of the left-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr1[] =
 {
-       0,    20,    21,    21,    21,    21,    21,    21,    21,    22,
-      22,    23,    23,    24,    24,    25,    25
+       0,    21,    22,    22,    22,    22,    22,    22,    22,    22,
+      23,    23,    24,    24,    25,    25,    26,    26
 };
 
 /* YYR2[RULE-NUM] -- Number of symbols on the right-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr2[] =
 {
-       0,     2,     3,     3,     2,     2,     2,     1,     0,     2,
-       1,     6,     1,     6,     0,     1,     1
+       0,     2,     3,     3,     4,     2,     2,     2,     1,     0,
+       2,     1,     6,     1,     6,     0,     1,     1
 };
 
 
@@ -1403,35 +1405,65 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* Command: CLICK Options STRING  */
-#line 78 "dish.y"
+#line 81 "dish.y"
                 {
                     Coordinates c = get_coordinates((yyvsp[0].text_literal),(yyvsp[-1].options));
                     xmacroplay("MotionNotify "+to_string(c.x)+" "+to_string(c.y));
                     xmacroplay("ButtonPress 1");
                     xmacroplay("ButtonRelease 1");
                 }
-#line 1414 "dish.tab.c"
+#line 1416 "dish.tab.c"
     break;
 
   case 3: /* Command: SEEK Options STRING  */
-#line 85 "dish.y"
+#line 88 "dish.y"
                 {
                     Coordinates c = get_coordinates((yyvsp[0].text_literal),(yyvsp[-1].options));
                     xmacroplay("MotionNotify "+to_string(c.x)+" "+to_string(c.y));
                 }
-#line 1423 "dish.tab.c"
+#line 1425 "dish.tab.c"
     break;
 
-  case 4: /* Command: TYPE STRING  */
-#line 90 "dish.y"
+  case 4: /* Command: WAIT INTEGER Options STRING  */
+#line 93 "dish.y"
+                {
+                    time_t expiration = time(NULL) + (yyvsp[-2].integral_literal);
+                    while(time(NULL) < expiration)
+                      if(pid_t child_pid = fork())
+                      {
+                        int status;
+                        waitpid(child_pid,&status,0);
+                        if(!WEXITSTATUS(status))
+                        {
+                          expiration = UINT64_MAX;
+                          break;
+                        }
+                      }
+                      else
+                      {
+                        Coordinates c = get_coordinates((yyvsp[0].text_literal),(yyvsp[-1].options));
+                        exit(0);                      
+                      }
+                    
+                    if(expiration!=UINT64_MAX)
+                    {
+                      cerr << "Timed out waiting for text to appear." << endl;
+                      exit(1);
+                    }
+                }
+#line 1455 "dish.tab.c"
+    break;
+
+  case 5: /* Command: TYPE STRING  */
+#line 119 "dish.y"
                 {
                     xmacroplay(string{"String "}+(yyvsp[0].text_literal));
                 }
-#line 1431 "dish.tab.c"
+#line 1463 "dish.tab.c"
     break;
 
-  case 5: /* Command: KEY KEY_LIST  */
-#line 94 "dish.y"
+  case 6: /* Command: KEY KEY_LIST  */
+#line 123 "dish.y"
                 {
                     for(const char* command : { "KeyStrPress ", "KeyStrRelease " } )
                     {
@@ -1444,103 +1476,103 @@ yyreduce:
                       }
                     }
                 }
-#line 1448 "dish.tab.c"
+#line 1480 "dish.tab.c"
     break;
 
-  case 6: /* Command: SLEEP INTEGER  */
-#line 107 "dish.y"
+  case 7: /* Command: SLEEP INTEGER  */
+#line 136 "dish.y"
                 {
 #ifndef PARSER_TEST
                     sleep((yyvsp[0].integral_literal));
 #endif
                 }
-#line 1458 "dish.tab.c"
+#line 1490 "dish.tab.c"
     break;
 
-  case 7: /* Command: PRINT  */
-#line 112 "dish.y"
+  case 8: /* Command: PRINT  */
+#line 141 "dish.y"
                       { dump_ocr_to_txt(); }
-#line 1464 "dish.tab.c"
+#line 1496 "dish.tab.c"
     break;
 
-  case 8: /* Command: %empty  */
-#line 114 "dish.y"
+  case 9: /* Command: %empty  */
+#line 143 "dish.y"
                 {
                 }
-#line 1471 "dish.tab.c"
+#line 1503 "dish.tab.c"
     break;
 
-  case 9: /* Options: CASE Disambiguator  */
-#line 118 "dish.y"
+  case 10: /* Options: CASE Disambiguator  */
+#line 147 "dish.y"
                 {
                     (yyval.options) = (yyvsp[0].options);
                     (yyval.options).case_sensitive = true;
                 }
-#line 1480 "dish.tab.c"
+#line 1512 "dish.tab.c"
     break;
 
-  case 10: /* Options: Disambiguator  */
-#line 123 "dish.y"
+  case 11: /* Options: Disambiguator  */
+#line 152 "dish.y"
                 {
                     (yyval.options) = (yyvsp[0].options);
                     (yyval.options).case_sensitive = false;
                 }
-#line 1489 "dish.tab.c"
+#line 1521 "dish.tab.c"
     break;
 
-  case 11: /* Disambiguator: '[' INTEGER FROM ORDINAL ']' Offset  */
-#line 129 "dish.y"
+  case 12: /* Disambiguator: '[' INTEGER FROM ORDINAL ']' Offset  */
+#line 158 "dish.y"
                 {
                     (yyval.options) = (yyvsp[0].options);
                     (yyval.options).ordinal = (yyvsp[-4].integral_literal);
                     (yyval.options).direction = (Options::Direction)(yyvsp[-2].integral_literal);
                 }
-#line 1499 "dish.tab.c"
+#line 1531 "dish.tab.c"
     break;
 
-  case 12: /* Disambiguator: Offset  */
-#line 135 "dish.y"
+  case 13: /* Disambiguator: Offset  */
+#line 164 "dish.y"
                 {
                     (yyval.options) = (yyvsp[0].options);
                     (yyval.options).ordinal = -1;
                 }
-#line 1508 "dish.tab.c"
-    break;
-
-  case 13: /* Offset: '+' '[' Number ',' Number ']'  */
-#line 141 "dish.y"
-                {
-                    (yyval.options).offset = Coordinates{(yyvsp[-3].numeric_literal), (yyvsp[-1].numeric_literal)};
-                }
-#line 1516 "dish.tab.c"
-    break;
-
-  case 14: /* Offset: %empty  */
-#line 145 "dish.y"
-                {
-                    (yyval.options).offset = Coordinates{0,0};
-                }
-#line 1524 "dish.tab.c"
-    break;
-
-  case 15: /* Number: NUMBER  */
-#line 150 "dish.y"
-                {
-                    (yyval.numeric_literal) = (yyvsp[0].numeric_literal);
-                }
-#line 1532 "dish.tab.c"
-    break;
-
-  case 16: /* Number: INTEGER  */
-#line 154 "dish.y"
-                {
-                    (yyval.numeric_literal) = (yyvsp[0].integral_literal);
-                }
 #line 1540 "dish.tab.c"
     break;
 
+  case 14: /* Offset: '+' '[' Number ',' Number ']'  */
+#line 170 "dish.y"
+                {
+                    (yyval.options).offset = Coordinates{(yyvsp[-3].numeric_literal), (yyvsp[-1].numeric_literal)};
+                }
+#line 1548 "dish.tab.c"
+    break;
 
-#line 1544 "dish.tab.c"
+  case 15: /* Offset: %empty  */
+#line 174 "dish.y"
+                {
+                    (yyval.options).offset = Coordinates{0,0};
+                }
+#line 1556 "dish.tab.c"
+    break;
+
+  case 16: /* Number: NUMBER  */
+#line 179 "dish.y"
+                {
+                    (yyval.numeric_literal) = (yyvsp[0].numeric_literal);
+                }
+#line 1564 "dish.tab.c"
+    break;
+
+  case 17: /* Number: INTEGER  */
+#line 183 "dish.y"
+                {
+                    (yyval.numeric_literal) = (yyvsp[0].integral_literal);
+                }
+#line 1572 "dish.tab.c"
+    break;
+
+
+#line 1576 "dish.tab.c"
 
       default: break;
     }
@@ -1764,13 +1796,13 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 158 "dish.y"
+#line 187 "dish.y"
 
 
 static FILE* yyin = stdin;
 int yylex()
 {
-  static enum { SEEN_NOTHING = 0, SEEN_CASE, SEEN_ORDINAL_BEGIN, SEEN_ORDINAL_END, SEEN_OFFSET_BEGIN, SEEN_OFFSET_END, SEEN_KEY_CMD, SEEN_SLEEP_CMD } line_state;
+  static enum { SEEN_NOTHING = 0, SEEN_WAIT, SEEN_CASE, SEEN_ORDINAL_BEGIN, SEEN_ORDINAL_END, SEEN_OFFSET_BEGIN, SEEN_OFFSET_END, SEEN_KEY_CMD, SEEN_SLEEP_CMD } line_state;
   static char* buffer;
   static char* buffer_end;
   static char* saveptr;
@@ -1824,6 +1856,11 @@ int yylex()
     return TYPE;
   else if(!strcmp(token,"print") && line_state==SEEN_NOTHING)
     return PRINT;
+  else if(!strcmp(token,"wait") && line_state==SEEN_NOTHING)
+  {
+    line_state = SEEN_WAIT;
+    return WAIT;
+  }
   else if(!strcmp(token,"key") && line_state==SEEN_NOTHING)
   {
     line_state = SEEN_KEY_CMD;
@@ -1834,7 +1871,7 @@ int yylex()
     line_state = SEEN_SLEEP_CMD;
     return SLEEP;
   }
-  else if(!strcmp(token,"-case") && line_state==SEEN_NOTHING)
+  else if(!strcmp(token,"-case") && line_state < SEEN_CASE)
   {
     line_state = SEEN_CASE;
     return CASE;
@@ -1858,7 +1895,7 @@ int yylex()
   }
   else if(!strcmp(token,",") && line_state==SEEN_OFFSET_BEGIN)
     return ',';
-  else if((line_state==SEEN_ORDINAL_BEGIN || line_state==SEEN_OFFSET_BEGIN || line_state==SEEN_SLEEP_CMD) && regex_match(token,NUMERIC))
+  else if((line_state==SEEN_ORDINAL_BEGIN || line_state==SEEN_OFFSET_BEGIN || line_state==SEEN_SLEEP_CMD || line_state==SEEN_WAIT) && regex_match(token,NUMERIC))
   {
     if(*token=='+')
       token++;
@@ -2317,10 +2354,14 @@ int main(int argc, char** argv)
       backend_cmd.clear();
       backend_cmd.push_back(argv[2]);
     }
-    single_command = argv[command_idx];
-    for(unsigned i=command_idx+1; i<argc; i++)
-      single_command += string(" ") + argv[i];
-    yyin = fmemopen(&single_command[0],single_command.length(),"r");
+
+    if(command_idx < argc)
+    {
+      single_command = argv[command_idx];
+      for(unsigned i=command_idx+1; i<argc; i++)
+        single_command += string(" ") + argv[i];
+      yyin = fmemopen(&single_command[0],single_command.length(),"r");
+    }
   }
   
   while(!feof(yyin) && !(retval = yyparse()));
