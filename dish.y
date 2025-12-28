@@ -105,9 +105,9 @@ Command:        CLICK Options STRING
                       }
                       else
                       {
-                        fclose(stderr); 
+                        fclose(stderr);
                         Coordinates c = get_coordinates($4,$3);
-                        exit(0);                      
+                        _exit(0);                      
                       }
                     
                     if(expiration!=UINT64_MAX)
